@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Online Library Management System</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Chart.js for Librarian Inventory Reports -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <!-- Toast Notification System -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Top Navigation Bar -->
+  <header class="navbar">
+    <div class="nav-brand">
+      <div class="brand-icon"><i class="fa-solid fa-book-bookmark"></i></div>
+      <div class="brand-text">
+        <span class="brand-title">Athenaeum</span>
+        <span class="brand-subtitle">Online Library Management System</span>
+      </div>
+    </div>
+
+    <!-- Active User & Role Switcher -->
+    <div class="nav-controls">
+      <div class="server-badge">
+        <span class="status-dot"></span> Java 21 Backend Active
+      </div>
+
+      <div class="role-selector-wrap">
+        <label for="role-select"><i class="fa-solid fa-user-gear"></i> Role:</label>
+        <select id="role-select" onchange="switchRole(this.value)">
+          <option value="LIBRARIAN">Librarian (Admin: Dr. Eleanor Vance)</option>
+          <option value="M101">Member: Alex Johnson (Active Loans)</option>
+          <option value="M102">Member: Sarah Connor</option>
+          <option value="M103">Member: Rahul Sharma</option>
+        </select>
+      </div>
+
+      <div class="user-pill" id="current-user-pill">
+        <i class="fa-solid fa-circle-user"></i>
+        <span id="current-user-name">Librarian</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="main-layout">
+
+    <!-- ======================================================== -->
+    <!-- LIBRARIAN VIEW -->
+    <!-- ======================================================== -->
+    <div id="librarian-view" class="view-panel active">
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <div class="badge-role">Librarian Portal</div>
+        </div>
+        <nav class="sidebar-nav">
+          <button class="nav-item active" onclick="switchLibTab('lib-books')">
+            <i class="fa-solid fa-book"></i> Book Management
+          </button>
+          <button class="nav-item" onclick="switchLibTab('lib-members')">
+            <i class="fa-solid fa-users"></i> Member Management
+          </button>
+          <button class="nav-item" onclick="switchLibTab('lib-transactions')">
+            <i class="fa-solid fa-arrow-right-arrow-left"></i> Transaction Management
+          </button>
+          <button class="nav-item" onclick="switchLibTab('lib-notifications')">
+            <i class="fa-solid fa-bullhorn"></i> Notification Panel
+          </button>
+          <button class="nav-item" onclick="switchLibTab('lib-reports')">
+            <i class="fa-solid fa-chart-pie"></i> Inventory Reports
+          </button>
+        </nav>
+
+        <div class="sidebar-quick-stats">
+          <div class="qs-title">System Status</div>
+          <div class="qs-item"><span>Total Catalog:</span> <strong id="sidebar-total-books">-</strong></div>
+          <div class="qs-item"><span>Active Borrows:</span> <strong id="sidebar-active-loans">-</strong></div>
+          <div class="qs-item"><span>Overdue Loans:</span> <strong id="sidebar-overdue-loans" class="text-danger">-</strong></div>
+        </div>
+      </aside>
+
+      <section class="content-area">
+
+        <!-- TAB 1: BOOK MANAGEMENT -->
+        <div id="lib-books" class="tab-content active">
+          <div class="content-header">
+            <div>
+              <h2>Book Management</h2>
+              <p class="subtitle">Add, update, or remove titles in the library catalog.</p>
+            </div>
+            <button class="btn btn-primary" onclick="openAddBookModal()">
+              <i class="fa-solid fa-plus"></i> Add New Book
+            </button>
+          </div>
+
+          <div class="filter-bar">
+            <div class="search-box">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="lib-book-search" placeholder="Search by title, author, or ISBN..." oninput="filterLibBooks()">
+            </div>
+            <div class="select-box">
+              <select id="lib-genre-filter" onchange="filterLibBooks()">
+                <option value="ALL">All Genres</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="table-card">
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>Author</th>
+                    <th>Genre</th>
+                    <th>ISBN</th>
+                    <th>Copies (Avail / Total)</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="lib-books-tbody">
+                  <!-- Populated dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: MEMBER MANAGEMENT -->
+        <div id="lib-members" class="tab-content">
+          <div class="content-header">
+            <div>
+              <h2>Member Management</h2>
+              <p class="subtitle">Register, update, and manage patron library memberships.</p>
+            </div>
+            <button class="btn btn-primary" onclick="openAddMemberModal()">
+              <i class="fa-solid fa-user-plus"></i> Add New Member
+            </button>
+          </div>
+
+          <div class="table-card">
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Member ID</th>
+                    <th>Full Name</th>
+                    <th>Email</th>
+                    <th>Membership Card ID</th>
+                    <th>Phone</th>
+                    <th>Role</th>
+                    <th>Joined Date</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="lib-members-tbody">
+                  <!-- Populated dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 3: TRANSACTION MANAGEMENT -->
+        <div id="lib-transactions" class="tab-content">
+          <div class="content-header">
+            <div>
+              <h2>Transaction Management</h2>
+              <p class="subtitle">Oversee active borrowings, overdue statuses, and process returns.</p>
+            </div>
+            <button class="btn btn-primary" onclick="openIssueBookModal()">
+              <i class="fa-solid fa-hand-holding-hand"></i> Issue / Borrow Book
+            </button>
+          </div>
+
+          <div class="filter-bar">
+            <div class="search-box">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="lib-txn-search" placeholder="Search transaction, book, or member..." oninput="filterLibTxns()">
+            </div>
+            <div class="select-box">
+              <select id="lib-txn-status-filter" onchange="filterLibTxns()">
+                <option value="ALL">All Statuses</option>
+                <option value="BORROWED">Currently Borrowed</option>
+                <option value="RETURNED">Returned</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="table-card">
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Txn ID</th>
+                    <th>Book Title</th>
+                    <th>Member Name</th>
+                    <th>Borrow Date</th>
+                    <th>Due Date</th>
+                    <th>Return Date</th>
+                    <th>Status</th>
+                    <th>Fine</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="lib-transactions-tbody">
+                  <!-- Populated dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 4: NOTIFICATION MANAGEMENT -->
+        <div id="lib-notifications" class="tab-content">
+          <div class="content-header">
+            <div>
+              <h2>Notification Management</h2>
+              <p class="subtitle">Broadcast due date reminders, announcements, and new arrival alerts.</p>
+            </div>
+          </div>
+
+          <div class="grid-2-col">
+            <!-- Send Notification Form Card -->
+            <div class="card form-card">
+              <h3><i class="fa-solid fa-paper-plane"></i> Send Notification</h3>
+              <form id="send-notification-form" onsubmit="handleSendNotification(event)">
+                <div class="form-group">
+                  <label for="notif-recipient">Target Recipient:</label>
+                  <select id="notif-recipient" required>
+                    <option value="ALL">📢 All Registered Members (Broadcast)</option>
+                    <!-- Populated dynamically with members -->
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="notif-type">Notification Type:</label>
+                  <select id="notif-type" required>
+                    <option value="DUE_DATE">⏰ Due Date Reminder</option>
+                    <option value="NEW_ARRIVAL">✨ New Book Arrival</option>
+                    <option value="ANNOUNCEMENT">📢 General Library Announcement</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="notif-title">Subject / Title:</label>
+                  <input type="text" id="notif-title" placeholder="e.g., Reminder: Book Due Soon" required>
+                </div>
+
+                <div class="form-group">
+                  <label for="notif-message">Message Content:</label>
+                  <textarea id="notif-message" rows="4" placeholder="Enter message for library members..." required></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block">
+                  <i class="fa-solid fa-paper-plane"></i> Send Notification Now
+                </button>
+              </form>
+            </div>
+
+            <!-- Sent Notification Log Card -->
+            <div class="card">
+              <h3><i class="fa-solid fa-clock-rotate-left"></i> Sent Notifications History</h3>
+              <div id="sent-notifs-list" class="notif-stream">
+                <!-- Populated dynamically -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 5: INVENTORY REPORTS -->
+        <div id="lib-reports" class="tab-content">
+          <div class="content-header">
+            <div>
+              <h2>Inventory Reports &amp; Analytics</h2>
+              <p class="subtitle">Real-time breakdown of book stocks, genre circulation, and borrowing trends.</p>
+            </div>
+            <button class="btn btn-outline" onclick="window.print()">
+              <i class="fa-solid fa-print"></i> Print / Export Report
+            </button>
+          </div>
+
+          <!-- KPI Cards -->
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <div class="kpi-icon icon-blue"><i class="fa-solid fa-book"></i></div>
+              <div class="kpi-info">
+                <span class="kpi-label">Total Catalog Copies</span>
+                <span class="kpi-val" id="report-total-books">-</span>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-icon icon-green"><i class="fa-solid fa-circle-check"></i></div>
+              <div class="kpi-info">
+                <span class="kpi-label">Available on Shelf</span>
+                <span class="kpi-val" id="report-avail-books">-</span>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-icon icon-orange"><i class="fa-solid fa-book-reader"></i></div>
+              <div class="kpi-info">
+                <span class="kpi-label">Currently Borrowed</span>
+                <span class="kpi-val" id="report-borrowed-books">-</span>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-icon icon-red"><i class="fa-solid fa-triangle-exclamation"></i></div>
+              <div class="kpi-info">
+                <span class="kpi-label">Overdue Loans</span>
+                <span class="kpi-val" id="report-overdue-books">-</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Charts Grid -->
+          <div class="grid-2-col charts-container">
+            <div class="card chart-card">
+              <h3><i class="fa-solid fa-chart-pie"></i> Inventory by Genre</h3>
+              <div class="chart-box">
+                <canvas id="genreChart"></canvas>
+              </div>
+            </div>
+
+            <div class="card chart-card">
+              <h3><i class="fa-solid fa-chart-line"></i> Monthly Borrowing Trends</h3>
+              <div class="chart-box">
+                <canvas id="trendsChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- MEMBER VIEW -->
+    <!-- ======================================================== -->
+    <div id="member-view" class="view-panel">
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <div class="badge-role member-badge">Member Portal</div>
+        </div>
+        <nav class="sidebar-nav">
+          <button class="nav-item active" onclick="switchMemberTab('mem-search')">
+            <i class="fa-solid fa-magnifying-glass"></i> Search Books &amp; Catalog
+          </button>
+          <button class="nav-item" onclick="switchMemberTab('mem-active')">
+            <i class="fa-solid fa-book-open-reader"></i> My Borrowed Books
+          </button>
+          <button class="nav-item" onclick="switchMemberTab('mem-history')">
+            <i class="fa-solid fa-clock-rotate-left"></i> Borrowing History
+          </button>
+          <button class="nav-item" onclick="switchMemberTab('mem-search-history')">
+            <i class="fa-solid fa-list-check"></i> Book Search History
+          </button>
+          <button class="nav-item" onclick="switchMemberTab('mem-profile')">
+            <i class="fa-solid fa-id-card"></i> Profile Information
+          </button>
+          <button class="nav-item" onclick="switchMemberTab('mem-alerts')">
+            <i class="fa-solid fa-bell"></i> Alerts &amp; Preferences
+          </button>
+        </nav>
+
+        <div class="sidebar-quick-stats">
+          <div class="qs-title">My Account Summary</div>
+          <div class="qs-item"><span>Active Loans:</span> <strong id="mem-stat-active">0</strong></div>
+          <div class="qs-item"><span>Total History:</span> <strong id="mem-stat-total">0</strong></div>
+          <div class="qs-item"><span>Pending Fines:</span> <strong id="mem-stat-fine">$0.00</strong></div>
+        </div>
+      </aside>
+
+      <section class="content-area">
+
+        <!-- MEMBER TAB 1: BOOK SEARCH & CATALOG -->
+        <div id="mem-search" class="tab-content active">
+          <div class="content-header">
+            <div>
+              <h2>Search Books Catalog</h2>
+              <p class="subtitle">Search by title, author, or genre to borrow books instantly.</p>
+            </div>
+          </div>
+
+          <!-- Search controls -->
+          <div class="member-search-bar-wrap">
+            <div class="search-form-row">
+              <div class="search-input-group">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="mem-search-input" placeholder="Enter keywords (e.g., Clean Code, Robert Martin, Algorithms)...">
+              </div>
+              <div class="search-field-select">
+                <select id="mem-search-criteria">
+                  <option value="all">Search All Fields</option>
+                  <option value="title">Title Only</option>
+                  <option value="author">Author Only</option>
+                  <option value="genre">Genre Only</option>
+                </select>
+              </div>
+              <button class="btn btn-primary" onclick="executeMemberSearch()">
+                <i class="fa-solid fa-search"></i> Search
+              </button>
+              <button class="btn btn-outline" onclick="resetMemberSearch()">
+                Reset
+              </button>
+            </div>
+
+            <!-- Genre pill filters -->
+            <div class="genre-pills" id="mem-genre-pills">
+              <!-- Dynamically populated -->
+            </div>
+
+            <!-- Recent search tags -->
+            <div class="recent-searches-row" id="mem-recent-searches-bar">
+              <span class="recent-label"><i class="fa-solid fa-clock"></i> Recent Searches:</span>
+              <span id="recent-search-chips"></span>
+            </div>
+          </div>
+
+          <!-- Books Grid -->
+          <div class="books-grid" id="mem-books-grid">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+        <!-- MEMBER TAB 2: MY BORROWED BOOKS (Active Loans & Quick Return) -->
+        <div id="mem-active" class="tab-content">
+          <div class="content-header">
+            <div>
+              <h2>My Active Borrowed Books</h2>
+              <p class="subtitle">Keep track of your borrowed books, upcoming due dates, and return books easily.</p>
+            </div>
+          </div>
+
+          <div id="mem-active-loans-list" class="active-loans-container">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+        <!-- MEMBER TAB 3: BORROWING HISTORY -->
+        <div id="mem-history" class="tab-content">
+          <div class="content-header">
+            <div>
+              <h2>Borrowing History</h2>
+              <p class="subtitle">Complete record of your past loans, return timestamps, and fees.</p>
+            </div>
+          </div>
+
+          <div class="table-card">
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Txn ID</th>
+                    <th>Book Title</th>
+                    <th>Borrow Date</th>
+                    <th>Due Date</th>
+                    <th>Return Date</th>
+                    <th>Status</th>
+                    <th>Late Fine</th>
+                  </tr>
+                </thead>
+                <tbody id="mem-history-tbody">
+                  <!-- Dynamically populated -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- MEMBER TAB 4: BOOK SEARCH HISTORY -->
+        <div id="mem-search-history" class="tab-content">
+          <div class="content-header">
+            <div>
+              <h2>Book Search History</h2>
+              <p class="subtitle">List of your previously searched queries and filters.</p>
+            </div>
+            <button class="btn btn-outline btn-sm" onclick="clearMySearchHistory()">
+              <i class="fa-solid fa-trash-can"></i> Clear History
+            </button>
+          </div>
+
+          <div class="table-card">
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Query</th>
+                    <th>Search Criteria</th>
+                    <th>Matches Found</th>
+                    <th>Timestamp</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="mem-search-history-tbody">
+                  <!-- Dynamically populated -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- MEMBER TAB 5: PROFILE MANAGEMENT -->
+        <div id="mem-profile" class="tab-content">
+          <div class="content-header">
+            <div>
+              <h2>Profile Management</h2>
+              <p class="subtitle">Update your personal account information and credentials.</p>
+            </div>
+          </div>
+
+          <div class="card form-card profile-card">
+            <form id="mem-profile-form" onsubmit="handleUpdateProfile(event)">
+              <div class="profile-header-info">
+                <div class="avatar-circle">
+                  <i class="fa-solid fa-user"></i>
+                </div>
+                <div>
+                  <h3 id="prof-display-name">Alex Johnson</h3>
+                  <p class="text-muted" id="prof-display-meta">Membership ID: LIB-2024-101 | Role: Member</p>
+                </div>
+              </div>
+
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label for="prof-name">Full Name:</label>
+                  <input type="text" id="prof-name" required>
+                </div>
+                <div class="form-group">
+                  <label for="prof-email">Email Address:</label>
+                  <input type="email" id="prof-email" required>
+                </div>
+              </div>
+
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label for="prof-phone">Phone Number:</label>
+                  <input type="text" id="prof-phone">
+                </div>
+                <div class="form-group">
+                  <label for="prof-password">Change Password:</label>
+                  <input type="password" id="prof-password" placeholder="Enter new password">
+                </div>
+              </div>
+
+              <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                  <i class="fa-solid fa-floppy-disk"></i> Save Profile Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- MEMBER TAB 6: NOTIFICATION ALERTS & PREFERENCES -->
+        <div id="mem-alerts" class="tab-content">
+          <div class="content-header">
+            <div>
+              <h2>Notification Alerts &amp; Preferences</h2>
+              <p class="subtitle">Manage reminder alerts and view real-time messages from the library.</p>
+            </div>
+          </div>
+
+          <div class="grid-2-col">
+            <!-- Real-time Alerts Inbox -->
+            <div class="card">
+              <h3><i class="fa-solid fa-inbox"></i> Alerts &amp; Messages Inbox</h3>
+              <div id="mem-notifs-stream" class="notif-stream">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+
+            <!-- Preferences Form -->
+            <div class="card form-card">
+              <h3><i class="fa-solid fa-sliders"></i> Notification Preferences</h3>
+              <p class="subtitle">Set your preferences for receiving automated library alerts.</p>
+
+              <form id="mem-pref-form" onsubmit="handleSavePreferences(event)">
+                <div class="pref-toggle-item">
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="pref-due-date" checked>
+                    <span class="slider"></span>
+                  </label>
+                  <div class="pref-text">
+                    <strong>Due Date Reminder Alerts</strong>
+                    <p>Receive notifications when borrowed books are due within 3 days or overdue.</p>
+                  </div>
+                </div>
+
+                <div class="pref-toggle-item">
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="pref-new-arrivals" checked>
+                    <span class="slider"></span>
+                  </label>
+                  <div class="pref-text">
+                    <strong>New Book Arrival Announcements</strong>
+                    <p>Be notified when fresh books and editions are added to the library catalog.</p>
+                  </div>
+                </div>
+
+                <div class="pref-toggle-item">
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="pref-newsletter">
+                    <span class="slider"></span>
+                  </label>
+                  <div class="pref-text">
+                    <strong>Monthly Newsletter &amp; Events</strong>
+                    <p>Occasional digests featuring reading recommendations and library events.</p>
+                  </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block">
+                  <i class="fa-solid fa-check"></i> Save Notification Settings
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+      </section>
+    </div>
+
+  </main>
+
+  <!-- ======================================================== -->
+  <!-- MODAL DIALOGS -->
+  <!-- ======================================================== -->
+
+  <!-- 1. Add / Edit Book Modal -->
+  <div id="book-modal" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="book-modal-title">Add New Book</h3>
+        <button class="btn-close" onclick="closeBookModal()">&times;</button>
+      </div>
+      <form id="book-form" onsubmit="handleSaveBook(event)">
+        <input type="hidden" id="book-form-id">
+
+        <div class="form-group">
+          <label for="book-title">Book Title:</label>
+          <input type="text" id="book-title" required placeholder="e.g. Structure and Interpretation of Computer Programs">
+        </div>
+
+        <div class="form-group">
+          <label for="book-author">Author(s):</label>
+          <input type="text" id="book-author" required placeholder="e.g. Harold Abelson, Gerald Jay Sussman">
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label for="book-isbn">ISBN:</label>
+            <input type="text" id="book-isbn" required placeholder="e.g. 978-0262510875">
+          </div>
+          <div class="form-group">
+            <label for="book-genre">Genre / Category:</label>
+            <input type="text" id="book-genre" required placeholder="e.g. Computer Science">
+          </div>
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label for="book-copies">Total Copies:</label>
+            <input type="number" id="book-copies" min="1" value="5" required>
+          </div>
+          <div class="form-group">
+            <label for="book-year">Publication Year:</label>
+            <input type="number" id="book-year" min="1800" max="2099" value="2024" required>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-outline" onclick="closeBookModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="book-submit-btn">Save Book</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. Add / Edit Member Modal -->
+  <div id="member-modal" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="member-modal-title">Create Member Account</h3>
+        <button class="btn-close" onclick="closeMemberModal()">&times;</button>
+      </div>
+      <form id="member-form" onsubmit="handleSaveMember(event)">
+        <input type="hidden" id="member-form-id">
+
+        <div class="form-group">
+          <label for="mem-modal-name">Full Name:</label>
+          <input type="text" id="mem-modal-name" required placeholder="e.g. Michael Scott">
+        </div>
+
+        <div class="form-group">
+          <label for="mem-modal-email">Email Address:</label>
+          <input type="email" id="mem-modal-email" required placeholder="e.g. michael@example.com">
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label for="mem-modal-card">Membership Card ID:</label>
+            <input type="text" id="mem-modal-card" placeholder="Auto-generated if left blank">
+          </div>
+          <div class="form-group">
+            <label for="mem-modal-phone">Phone Number:</label>
+            <input type="text" id="mem-modal-phone" placeholder="e.g. +1-555-0123">
+          </div>
+        </div>
+
+        <div class="form-group" id="mem-modal-pass-group">
+          <label for="mem-modal-pass">Password:</label>
+          <input type="password" id="mem-modal-pass" value="password123" placeholder="Default: password123">
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-outline" onclick="closeMemberModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="member-submit-btn">Save Member</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 3. Issue / Borrow Book Modal (For Librarian) -->
+  <div id="issue-modal" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Issue / Borrow Book</h3>
+        <button class="btn-close" onclick="closeIssueModal()">&times;</button>
+      </div>
+      <form id="issue-form" onsubmit="handleIssueBook(event)">
+        <div class="form-group">
+          <label for="issue-book-select">Select Book:</label>
+          <select id="issue-book-select" required>
+            <!-- Dynamically populated -->
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="issue-member-select">Select Member:</label>
+          <select id="issue-member-select" required>
+            <!-- Dynamically populated -->
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="issue-days">Loan Duration (Days):</label>
+          <input type="number" id="issue-days" min="1" max="60" value="14" required>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-outline" onclick="closeIssueModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Confirm Issue</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Application Logic -->
+  <script src="js/app.js"></script>
+</body>
+</html>
